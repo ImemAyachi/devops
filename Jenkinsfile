@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_HUB_CREDENTIALS = credentials('Dockerhub_pwd')
-        IMAGE_NAME = "imem11/test1"
+        IMAGE_NAME = "imem11/test2"
         IMAGE_TAG = "${sh(script:'git rev-parse --short HEAD', returnStdout: true).trim()}"
     }
 

@@ -4,19 +4,20 @@ pipeline {
     environment {
         DOCKER_HUB_CREDENTIALS = credentials('Dockerhub_pwd')
         IMAGE_NAME = "imem11/test1"
-        // Dynamic tag using short Git commit hash + "latest"
         IMAGE_TAG = "${sh(script:'git rev-parse --short HEAD', returnStdout: true).trim()}"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', 
-                    url: 'https://github.com/ImemAyachi/devops.git'
+                checkout scmGit(
+                    branches: [[name: 'main']],
+                    userRemoteConfigs: [[url: 'https://github.com/ImemAyachi/devops.git']]
+                )
             }
         }
 
-        stage('Maven Verify') {
+        stage('Maven Build') {
             steps {
                 sh "mvn -version"
                 sh "mvn clean install -DskipTests"
@@ -39,7 +40,6 @@ pipeline {
                     docker push ${IMAGE_NAME}:${IMAGE_TAG}
                     docker push ${IMAGE_NAME}:latest
                 """
-                // Optional: logout for security
                 sh 'docker logout'
             }
         }
@@ -47,12 +47,11 @@ pipeline {
 
     post {
         always {
-            // Clean workspace + remove dangling images
             cleanWs()
             sh 'docker system prune -f || true'
         }
         success {
-            echo "Image successfully pushed to Docker Hub: ${IMAGE_NAME}:${IMAGE_TAG}"
+            echo "SUCCESS → ${IMAGE_NAME}:${IMAGE_TAG} pushed to Docker Hub"
         }
         failure {
             echo "Pipeline failed"
